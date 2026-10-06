@@ -1,54 +1,21 @@
 import os
 import json
-import requests
 import chainlit as cl
 from dotenv import load_dotenv
 from openai import OpenAI
 from tools import TOOLS_DEFINITIONS, AVAILABLE_TOOLS
 
+# Carica le variabili d'ambiente (.env)
 load_dotenv()
 
-api_key = os.getenv("OPENROUTER_API_KEY")
+api_key = os.getenv("OPENAI_API_KEY")
 
 if not api_key:
-    raise ValueError("⚠️ OPENROUTER_API_KEY non trovata nel file .env!")
+    raise ValueError("⚠️ OPENAI_API_KEY non trovata nel file .env!")
 
-client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=api_key
-)
-
-def get_free_model() -> str:
-    """Interroga OpenRouter per trovare un modello :free realmente disponibile al momento."""
-    preferred_free_models = [
-        "google/gemini-2.0-flash-lite-preview-02-05:free",
-        "google/gemini-2.0-flash-exp:free",
-        "meta-llama/llama-3.2-11b-vision-instruct:free",
-        "mistralai/mistral-small-24b-instruct-2501:free",
-        "qwen/qwen-2.5-coder-32b-instruct:free"
-    ]
-    
-    try:
-        response = requests.get("https://openrouter.ai/api/v1/models", timeout=5)
-        if response.status_code == 200:
-            data = response.json().get("data", [])
-            active_free_ids = [m.get("id", "") for m in data if m.get("id", "").endswith(":free")]
-            
-            for pref in preferred_free_models:
-                if pref in active_free_ids:
-                    print(f"Modello gratuito selezionato (da lista preferiti): {pref}")
-                    return pref
-            
-            if active_free_ids:
-                print(f"Modello gratuito selezionato (dinamico): {active_free_ids[0]}")
-                return active_free_ids[0]
-                
-    except Exception as e:
-        print(f"Errore durante il recupero dei modelli da OpenRouter: {e}")
-        
-    return "google/gemini-2.0-flash-lite-preview-02-05:free"
-
-MODEL_NAME = get_free_model()
+# Client OpenAI nativo
+client = OpenAI(api_key=api_key)
+MODEL_NAME = "gpt-4o-mini"
 
 SYSTEM_PROMPT = """
 Sei l'assistente virtuale ufficiale del 'Baricentro Sport & Wellness', un centro sportivo situato a Bari.
